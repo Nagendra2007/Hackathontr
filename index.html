@@ -120,12 +120,19 @@ tr:hover{background:#dce8ff;}
 <!-- DASHBOARD -->
 <div class="dashboard" id="dashboard">
   <div class="cards">
+    <div id="dashboardHeader" style="text-align:center; margin-bottom:20px; font-size:24px; font-weight:700; color:#1a73e8;">
+  <!-- Month & Year will appear here -->
+</div>
+
     <div class="card"><h2>Monthly Income</h2><p id="incomeValue">₹0</p></div>
     <div class="card"><h2>Expenses</h2><p id="expenseValue">₹0</p></div>
     <div class="card"><h2>Money Credited</h2><p id="creditValue">₹0</p></div>
-    <div class="card"><h2>Crypto Savings</h2><p id="cryptoValue">₹0</p></div>
+    <div class="card"><h2>INVESTMENTS</h2><p id="cryptoValue">₹0</p></div>
   </div>
   <div class="graph"><h2>Monthly Expense Overview</h2><canvas id="expenseChart" width="400" height="180"></canvas></div>
+  <footer style="text-align:center; padding:15px; color:#555; font-weight:600;">
+  Built by QUANTUM CODERS
+</footer>
 </div>
 
 <!-- TRANSACTIONS SECTION -->
@@ -147,7 +154,7 @@ tr:hover{background:#dce8ff;}
     <button class="close-btn" onclick="addTransaction()">Add Transaction</button>
   </div>
   <table id="transactionTable">
-    <tr><th>S.No</th><th>Category</th><th>Type</th><th>Date</th><th>Amount</th><th>Rounded</th><th>Saved to Crypto</th><th>Action</th></tr>
+    <tr><th>S.No</th><th>Category</th><th>Type</th><th>Date</th><th>Amount</th><th>Rounded</th><th>Invested In</th><th>Action</th></tr>
   </table>
 </div>
 
@@ -198,32 +205,52 @@ if(transactions.length===0){
 }
 
 // CHART
-const ctx=document.getElementById("expenseChart").getContext("2d");
-const chart=new Chart(ctx,{type:"bar",data:{labels:["Jan","Feb","Mar","Apr","May","Jun"],datasets:[{label:"Expenses",data:[0,0,0,0,0,0],backgroundColor:"#1a73e8",borderRadius:6}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}});
+const ctx = document.getElementById("expenseChart").getContext("2d");
+const chart = new Chart(ctx, {
+    type: "bar",
+    data: {
+        labels: ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],
+        datasets: [{
+            label: "Expenses",
+            data: Array(12).fill(0),
+            backgroundColor: "#1a73e8",
+            borderRadius: 6
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true } }
+    }
+});
 
-// DASHBOARD UPDATE
+// Update Dashboard
 function updateDashboard(){
-  let income=parseInt(document.getElementById("income").value)||0;
-  localStorage.setItem("income",income);
-  let totalExpense=transactions.filter(t=>t.type=="Debit").reduce((a,b)=>a+b.rounded,0);
-  let totalCredit=transactions.filter(t=>t.type=="Credit").reduce((a,b)=>a+b.rounded,0);
-  document.getElementById("incomeValue").textContent="₹"+income;
-  document.getElementById("expenseValue").textContent="₹"+totalExpense;
-  document.getElementById("creditValue").textContent="₹"+totalCredit;
-  let totalCrypto=Object.values(cryptoSavings).reduce((a,b)=>a+b,0);
-  document.getElementById("cryptoValue").textContent="₹"+totalCrypto;
+    let income = parseInt(document.getElementById("income").value) || 0;
+    localStorage.setItem("income", income);
 
-  // Chart
-  let monthlyExpenses=[0,0,0,0,0,0];
-  transactions.filter(t=>t.type=="Debit").forEach(t=>{
-    let m=new Date(t.date).getMonth();
-    if(m<6) monthlyExpenses[m]+=t.rounded;
-  });
-  chart.data.datasets[0].data=monthlyExpenses; chart.update();
+    let totalExpense = transactions.filter(t => t.type == "Debit").reduce((a,b)=>a+b.rounded,0);
+    let totalCredit = transactions.filter(t => t.type == "Credit").reduce((a,b)=>a+b.rounded,0);
+    document.getElementById("incomeValue").textContent = "₹" + income;
+    document.getElementById("expenseValue").textContent = "₹" + totalExpense;
+    document.getElementById("creditValue").textContent = "₹" + totalCredit;
 
-  updateTransactionTable();
-  updateCryptoTable();
+    let totalCrypto = Object.values(cryptoSavings).reduce((a,b)=>a+b,0);
+    document.getElementById("cryptoValue").textContent = "₹" + totalCrypto;
+
+    // Update Chart based on transaction month
+    let monthlyExpenses = Array(12).fill(0);
+    transactions.filter(t => t.type=="Debit").forEach(t=>{
+        let m = new Date(t.date).getMonth(); // 0 = Jan, 9 = Oct
+        monthlyExpenses[m] += t.rounded;
+    });
+    chart.data.datasets[0].data = monthlyExpenses; 
+    chart.update();
+
+    updateTransactionTable();
+    updateCryptoTable();
 }
+
 
 // TRANSACTION TABLE
 let addBtn = document.querySelector("#transactionsSection .close-btn");
